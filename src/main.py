@@ -69,6 +69,7 @@ def ensure_env_file(base_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="HR outreach automation")
     parser.add_argument("--dry-run", action="store_true", help="Do not send emails, only log.")
+    parser.add_argument("--no-network", action="store_true", help="Skip external network calls (collectors + SMTP) for local simulation.")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parents[1]
@@ -78,6 +79,10 @@ def main() -> None:
     data_dir = base_dir / "data"
 
     job_sources = load_yaml(str(config_dir / "job_sources.yaml"))
+    if args.no_network:
+        print("[info] Running in no-network mode: skipping collectors and SMTP")
+        # Empty ATS sources to avoid any HTTP calls
+        job_sources = {"ats_sources": {"greenhouse": [], "lever": []}}
     email_config = load_yaml(str(config_dir / "email_config.yaml"))
 
     greenhouse = GreenhouseCollector()
@@ -121,7 +126,11 @@ def main() -> None:
     footer = UnsubscribeFooter(text=footer_text)
 
     smtp_config = load_smtp_config()
-    sender = SmtpSender(smtp_config) if smtp_config else None
+    # If running no-network, ensure we don't create an SMTP sender
+    if args.no_network:
+        sender = None
+    else:
+        sender = SmtpSender(smtp_config) if smtp_config else None
 
     rate_limit = RateLimiter(
         daily_limit=int(os.getenv("DAILY_EMAIL_LIMIT", email_config["rate_limit"]["daily_limit"])),

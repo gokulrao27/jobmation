@@ -1,1 +1,41 @@
 recruiter_name,email,confidence_score,source
+link rel,link.rel@boards.greenhouse.io,0.5,pattern_match
+link rel,link@boards.greenhouse.io,0.5,pattern_match
+link rel,hr@boards.greenhouse.io,0.5,pattern_match
+link rel,careers@boards.greenhouse.io,0.5,pattern_match
+flex text,flex.text@boards.greenhouse.io,0.5,pattern_match
+flex text,flex@boards.greenhouse.io,0.5,pattern_match
+item menu,item.menu@boards.greenhouse.io,0.5,pattern_match
+item menu,item@boards.greenhouse.io,0.5,pattern_match
+ancestor current,ancestor.current@boards.greenhouse.io,0.5,pattern_match
+ancestor current,ancestor@boards.greenhouse.io,0.5,pattern_match
+custom menu,custom.menu@boards.greenhouse.io,0.5,pattern_match
+custom menu,custom@boards.greenhouse.io,0.5,pattern_match
+type menu,type.menu@boards.greenhouse.io,0.5,pattern_match
+type menu,type@boards.greenhouse.io,0.5,pattern_match
+parent menu,parent.menu@boards.greenhouse.io,0.5,pattern_match
+parent menu,parent@boards.greenhouse.io,0.5,pattern_match
+protected characteristic,protected.characteristic@boards.greenhouse.io,0.5,pattern_match
+protected characteristic,protected@boards.greenhouse.io,0.5,pattern_match
+If you,if.you@boards.greenhouse.io,0.5,pattern_match
+If you,if@boards.greenhouse.io,0.5,pattern_match
+en current,en.current@boards.greenhouse.io,0.5,pattern_match
+en current,en@boards.greenhouse.io,0.5,pattern_match
+li class,li.class@boards.greenhouse.io,0.5,pattern_match
+li class,li@boards.greenhouse.io,0.5,pattern_match
+reset facetwp,reset.facetwp@boards.greenhouse.io,0.5,pattern_match
+reset facetwp,reset@boards.greenhouse.io,0.5,pattern_match
+"Light
+      flavor",light.flavor@boards.greenhouse.io,0.5,pattern_match
+"Light
+      flavor",light@boards.greenhouse.io,0.5,pattern_match
+"White
+    flavor",white.flavor@boards.greenhouse.io,0.5,pattern_match
+"White
+    flavor",white@boards.greenhouse.io,0.5,pattern_match
+United Kingdom,united.kingdom@boards.greenhouse.io,0.5,pattern_match
+United Kingdom,united@boards.greenhouse.io,0.5,pattern_match
+"Flag
+    Flag",flag.flag@boards.greenhouse.io,0.5,pattern_match
+"Flag
+    Flag",flag@boards.greenhouse.io,0.5,pattern_match

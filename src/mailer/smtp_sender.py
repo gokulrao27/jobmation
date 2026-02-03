@@ -35,21 +35,37 @@ class SmtpSender:
         message.set_content(body)
 
         attachment = Path(attachment_path)
-        mime_type, _ = mimetypes.guess_type(str(attachment))
-        if mime_type:
-            maintype, subtype = mime_type.split("/", 1)
+        if attachment.exists():
+            mime_type, _ = mimetypes.guess_type(str(attachment))
+            if mime_type:
+                maintype, subtype = mime_type.split("/", 1)
+            else:
+                maintype, subtype = "application", "octet-stream"
+            with attachment.open("rb") as handle:
+                message.add_attachment(
+                    handle.read(),
+                    maintype=maintype,
+                    subtype=subtype,
+                    filename=attachment.name,
+                )
         else:
-            maintype, subtype = "application", "octet-stream"
-        with attachment.open("rb") as handle:
-            message.add_attachment(
-                handle.read(),
-                maintype=maintype,
-                subtype=subtype,
-                filename=attachment.name,
-            )
+            # Attachment missing - warn and continue without attachment
+            print(f"[warn] Attachment not found at {attachment}; sending without attachment")
 
-        with smtplib.SMTP(self.config.host, self.config.port) as server:
-            server.starttls()
+        # Use implicit SSL for port 465, otherwise use STARTTLS
+        if self.config.port == 465:
+            server_ctx = smtplib.SMTP_SSL(self.config.host, self.config.port)
+        else:
+            server_ctx = smtplib.SMTP(self.config.host, self.config.port)
+
+        with server_ctx as server:
+            # For non-SSL connections, attempt STARTTLS
+            if self.config.port != 465:
+                try:
+                    server.starttls()
+                except Exception:
+                    # If STARTTLS fails, continue and let login raise if necessary
+                    print("[warn] STARTTLS failed or not supported by server; continuing without STARTTLS")
             server.login(self.config.username, self.config.password)
             server.send_message(message)
 
