@@ -1,0 +1,5 @@
+rate_limit:
+  daily_limit: 40
+  min_seconds_between_sends: 30
+compliance:
+  unsubscribe_text: "If you'd prefer not to receive future emails, reply with 'unsubscribe'."
