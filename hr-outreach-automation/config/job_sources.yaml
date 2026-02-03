@@ -1,0 +1,11 @@
+ats_sources:
+  greenhouse:
+    - company_slug: examplecorp
+      careers_url: https://boards.greenhouse.io/examplecorp
+  lever:
+    - company_slug: exampleco
+      careers_url: https://jobs.lever.co/exampleco
+job_boards:
+  - name: wellfound
+    search_url: https://wellfound.com/jobs
+    note: "Use Wellfound search manually or via their public APIs if available. Avoid scraping private data."
