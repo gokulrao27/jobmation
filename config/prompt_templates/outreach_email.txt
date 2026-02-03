@@ -4,6 +4,11 @@ Hello {{ recruiter_name | default('Hiring Team') }},
 
 I hope you're doing well. I noticed {{ company_name }} is hiring for {{ job_title }} in {{ location }}. I am interested in the role and would appreciate being considered. I bring {{ candidate_profile }} and believe I could contribute to your team.
 
+Highlights from my recent experience:
+- 5 years of full-stack delivery with Java, Spring Boot, React, and microservices.
+- Built and optimized fintech/payment platforms at IBM, including real-time transaction processing.
+- Improved performance and scalability through refactoring to microservices, caching (Redis), and CI/CD automation.
+
 If helpful, I have attached my resume. Thank you for your time and consideration.
 
 Best regards,

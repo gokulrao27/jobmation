@@ -98,6 +98,12 @@ def main() -> None:
         recruiter_company_map[recruiter.recruiter_name] = recruiter.company_name
         emails.extend(discover_from_careers_url(recruiter.recruiter_name, recruiter.profile_url, validator))
 
+    deduped_emails = {}
+    for email in emails:
+        if email.email not in deduped_emails:
+            deduped_emails[email.email] = email
+
+    emails = list(deduped_emails.values())
     write_emails_csv(str(data_dir / "emails.csv"), emails)
 
     personalizer = EmailPersonalizer(str(config_dir / "prompt_templates"))

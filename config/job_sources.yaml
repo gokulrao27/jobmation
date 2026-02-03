@@ -9,3 +9,15 @@ job_boards:
   - name: wellfound
     search_url: https://wellfound.com/jobs
     note: "Use Wellfound search manually or via their public APIs if available. Avoid scraping private data."
+  - name: usajobs
+    search_url: https://www.usajobs.gov/Search
+    note: "Public federal listings; consider their public API/RSS if available."
+  - name: builtin
+    search_url: https://builtin.com/jobs
+    note: "Use public feeds or manual export; avoid scraping private data."
+  - name: remotive
+    search_url: https://remotive.com/remote-jobs
+    note: "Public listings; check for public APIs or RSS."
+  - name: weworkremotely
+    search_url: https://weworkremotely.com/categories/remote-programming-jobs
+    note: "Public listings; check for public APIs or RSS."
