@@ -3,6 +3,7 @@ import csv
 import datetime as dt
 import os
 from pathlib import Path
+import re
 import shutil
 from typing import Dict, List
 
@@ -48,6 +49,138 @@ def write_emails_csv(path: str, emails: list) -> None:
             writer.writerow([email.recruiter_name, email.email, email.confidence_score, email.source])
 
 
+def write_job_board_urls_csv(path: str, boards: list) -> None:
+    with open(path, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["name", "search_url", "note"])
+        for board in boards:
+            writer.writerow([board.get("name", ""), board.get("search_url", ""), board.get("note", "")])
+
+
+def is_us_location(location: str) -> bool:
+    if not location:
+        return False
+    normalized = location.strip().lower()
+    if not normalized:
+        return False
+    if "united states" in normalized or "united states of america" in normalized:
+        return True
+    if re.search(r"\busa\b", normalized) or re.search(r"\bu\.s\.a\.?\b", normalized):
+        return True
+    if re.search(r"\bu\.s\.?\b", normalized) or re.search(r"\bus\b", normalized):
+        return True
+    us_state_names = {
+        "alabama",
+        "alaska",
+        "arizona",
+        "arkansas",
+        "california",
+        "colorado",
+        "connecticut",
+        "delaware",
+        "florida",
+        "georgia",
+        "hawaii",
+        "idaho",
+        "illinois",
+        "indiana",
+        "iowa",
+        "kansas",
+        "kentucky",
+        "louisiana",
+        "maine",
+        "maryland",
+        "massachusetts",
+        "michigan",
+        "minnesota",
+        "mississippi",
+        "missouri",
+        "montana",
+        "nebraska",
+        "nevada",
+        "new hampshire",
+        "new jersey",
+        "new mexico",
+        "new york",
+        "north carolina",
+        "north dakota",
+        "ohio",
+        "oklahoma",
+        "oregon",
+        "pennsylvania",
+        "rhode island",
+        "south carolina",
+        "south dakota",
+        "tennessee",
+        "texas",
+        "utah",
+        "vermont",
+        "virginia",
+        "washington",
+        "west virginia",
+        "wisconsin",
+        "wyoming",
+        "district of columbia",
+    }
+    if any(state in normalized for state in us_state_names):
+        return True
+    us_state_abbrevs = [
+        "AL",
+        "AK",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "ID",
+        "IL",
+        "IN",
+        "IA",
+        "KS",
+        "KY",
+        "LA",
+        "ME",
+        "MD",
+        "MA",
+        "MI",
+        "MN",
+        "MS",
+        "MO",
+        "MT",
+        "NE",
+        "NV",
+        "NH",
+        "NJ",
+        "NM",
+        "NY",
+        "NC",
+        "ND",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VT",
+        "VA",
+        "WA",
+        "WV",
+        "WI",
+        "WY",
+        "DC",
+    ]
+    abbrev_pattern = r"\b(" + "|".join(us_state_abbrevs) + r")\b"
+    return bool(re.search(abbrev_pattern, location, flags=re.IGNORECASE))
+
+
 def append_log(path: str, row: dict) -> None:
     file_exists = Path(path).exists()
     with open(path, "a", newline="", encoding="utf-8") as handle:
@@ -68,9 +201,7 @@ def ensure_env_file(base_dir: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="HR outreach automation")
-    parser.add_argument("--dry-run", action="store_true", help="Do not send emails, only log.")
-    parser.add_argument("--no-network", action="store_true", help="Skip external network calls (collectors + SMTP) for local simulation.")
-    args = parser.parse_args()
+    parser.parse_args()
 
     base_dir = Path(__file__).resolve().parents[1]
     ensure_env_file(base_dir)
@@ -80,10 +211,6 @@ def main() -> None:
     data_dir.mkdir(exist_ok=True)
 
     job_sources = load_yaml(str(config_dir / "job_sources.yaml"))
-    if args.no_network:
-        print("[info] Running in no-network mode: skipping collectors and SMTP")
-        # Empty ATS sources to avoid any HTTP calls
-        job_sources = {"ats_sources": {"greenhouse": [], "lever": []}}
     email_config = load_yaml(str(config_dir / "email_config.yaml"))
 
     greenhouse = GreenhouseCollector()
@@ -103,8 +230,18 @@ def main() -> None:
             job.company_domain = company_domain
         jobs.extend(fetched)
 
+    us_jobs = [job for job in jobs if is_us_location(job.location)]
+    if jobs and not us_jobs:
+        print("[warn] No jobs matched USA/United States location filter.")
+    jobs = us_jobs
+
     write_companies_csv(str(data_dir / "companies.csv"), jobs)
     print(f"[info] Collected {len(jobs)} jobs.")
+
+    job_boards = job_sources.get("job_boards", [])
+    if job_boards:
+        write_job_board_urls_csv(str(data_dir / "job_board_urls.csv"), job_boards)
+        print(f"[info] Saved {len(job_boards)} job board search URLs.")
 
     recruiters = []
     seen_companies = set()
@@ -150,11 +287,7 @@ def main() -> None:
     footer = UnsubscribeFooter(text=footer_text)
 
     smtp_config = load_smtp_config()
-    # If running no-network, ensure we don't create an SMTP sender
-    if args.no_network:
-        sender = None
-    else:
-        sender = SmtpSender(smtp_config) if smtp_config else None
+    sender = SmtpSender(smtp_config) if smtp_config else None
     if not sender:
         print("[info] SMTP sender not configured; running in dry-run mode.")
 
@@ -197,7 +330,7 @@ def main() -> None:
 
         status = "skipped"
         try:
-            if args.dry_run or not sender:
+            if not sender:
                 status = "dry_run"
             else:
                 sender.send_email(
