@@ -3,6 +3,7 @@ import csv
 import datetime as dt
 import os
 from pathlib import Path
+import shutil
 from typing import Dict, List
 
 import yaml
@@ -56,14 +57,23 @@ def append_log(path: str, row: dict) -> None:
         writer.writerow(row)
 
 
+def ensure_env_file(base_dir: Path) -> None:
+    env_path = base_dir / ".env"
+    example_path = base_dir / ".env.example"
+    if env_path.exists() or not example_path.exists():
+        return
+    shutil.copy(example_path, env_path)
+    print(f"[info] Created {env_path} from .env.example")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="HR outreach automation")
     parser.add_argument("--dry-run", action="store_true", help="Do not send emails, only log.")
     args = parser.parse_args()
 
-    load_dotenv()
-
     base_dir = Path(__file__).resolve().parents[1]
+    ensure_env_file(base_dir)
+    load_dotenv()
     config_dir = base_dir / "config"
     data_dir = base_dir / "data"
 
