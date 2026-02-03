@@ -1,10 +1,10 @@
 ats_sources:
   greenhouse:
-    - company_slug: examplecorp
-      careers_url: https://boards.greenhouse.io/examplecorp
-  lever:
-    - company_slug: exampleco
-      careers_url: https://jobs.lever.co/exampleco
+    - company_slug: airbnb
+      careers_url: https://boards.greenhouse.io/airbnb
+    - company_slug: stripe
+      careers_url: https://boards.greenhouse.io/stripe
+  lever: []
 job_boards:
   - name: wellfound
     search_url: https://wellfound.com/jobs

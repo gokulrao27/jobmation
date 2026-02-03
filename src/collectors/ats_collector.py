@@ -20,9 +20,13 @@ class GreenhouseCollector:
 
     def fetch_jobs(self, company_slug: str, careers_url: str) -> List[CompanyJob]:
         api_url = f"https://boards-api.greenhouse.io/v1/boards/{company_slug}/jobs"
-        response = self.session.get(api_url, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
+        try:
+            response = self.session.get(api_url, timeout=20)
+            response.raise_for_status()
+            payload = response.json()
+        except (requests.RequestException, ValueError) as exc:
+            print(f"[warn] Greenhouse fetch failed for {company_slug}: {exc}")
+            return []
         jobs: List[CompanyJob] = []
         for job in payload.get("jobs", []):
             location = job.get("location", {}).get("name", "")
@@ -43,9 +47,13 @@ class LeverCollector:
 
     def fetch_jobs(self, company_slug: str, careers_url: str) -> List[CompanyJob]:
         api_url = f"https://api.lever.co/v0/postings/{company_slug}?mode=json"
-        response = self.session.get(api_url, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
+        try:
+            response = self.session.get(api_url, timeout=20)
+            response.raise_for_status()
+            payload = response.json()
+        except (requests.RequestException, ValueError) as exc:
+            print(f"[warn] Lever fetch failed for {company_slug}: {exc}")
+            return []
         jobs: List[CompanyJob] = []
         for job in payload:
             location = job.get("categories", {}).get("location", "")

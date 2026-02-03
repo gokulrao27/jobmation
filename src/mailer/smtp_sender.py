@@ -2,6 +2,7 @@ import os
 import smtplib
 from dataclasses import dataclass
 from email.message import EmailMessage
+import mimetypes
 from pathlib import Path
 from typing import Optional
 
@@ -34,11 +35,16 @@ class SmtpSender:
         message.set_content(body)
 
         attachment = Path(attachment_path)
+        mime_type, _ = mimetypes.guess_type(str(attachment))
+        if mime_type:
+            maintype, subtype = mime_type.split("/", 1)
+        else:
+            maintype, subtype = "application", "octet-stream"
         with attachment.open("rb") as handle:
             message.add_attachment(
                 handle.read(),
-                maintype="application",
-                subtype=attachment.suffix.lstrip("."),
+                maintype=maintype,
+                subtype=subtype,
                 filename=attachment.name,
             )
 
