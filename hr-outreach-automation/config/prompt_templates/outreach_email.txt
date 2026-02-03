@@ -1,0 +1,11 @@
+Subject: {{ subject }}
+
+Hello {{ recruiter_name | default('Hiring Team') }},
+
+I hope you're doing well. I noticed {{ company_name }} is hiring for {{ job_title }} in {{ location }}. I am interested in the role and would appreciate being considered. I bring {{ candidate_profile }} and believe I could contribute to your team.
+
+If helpful, I have attached my resume. Thank you for your time and consideration.
+
+Best regards,
+{{ candidate_name }}
+{{ candidate_email }}
