@@ -2,8 +2,10 @@ ats_sources:
   greenhouse:
     - company_slug: airbnb
       careers_url: https://boards.greenhouse.io/airbnb
+      company_domain: airbnb.com
     - company_slug: stripe
       careers_url: https://boards.greenhouse.io/stripe
+      company_domain: stripe.com
   lever: []
 job_boards:
   - name: wellfound

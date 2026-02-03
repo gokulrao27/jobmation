@@ -12,6 +12,7 @@ class CompanyJob:
     job_title: str
     location: str
     careers_url: str
+    company_domain: str | None = None
 
 
 class GreenhouseCollector:
@@ -71,9 +72,11 @@ class LeverCollector:
 def write_companies_csv(path: str, jobs: Iterable[CompanyJob]) -> None:
     with open(path, "w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["company_name", "job_title", "location", "careers_url"])
+        writer.writerow(["company_name", "job_title", "location", "careers_url", "company_domain"])
         for job in jobs:
-            writer.writerow([job.company_name, job.job_title, job.location, job.careers_url])
+            writer.writerow(
+                [job.company_name, job.job_title, job.location, job.careers_url, job.company_domain or ""]
+            )
 
 
 def log_collection_summary(jobs: Iterable[CompanyJob]) -> Dict[str, int]:

@@ -77,6 +77,7 @@ def main() -> None:
     load_dotenv()
     config_dir = base_dir / "config"
     data_dir = base_dir / "data"
+    data_dir.mkdir(exist_ok=True)
 
     job_sources = load_yaml(str(config_dir / "job_sources.yaml"))
     if args.no_network:
@@ -90,11 +91,20 @@ def main() -> None:
 
     jobs = []
     for entry in job_sources.get("ats_sources", {}).get("greenhouse", []):
-        jobs.extend(greenhouse.fetch_jobs(entry["company_slug"], entry["careers_url"]))
+        company_domain = entry.get("company_domain")
+        fetched = greenhouse.fetch_jobs(entry["company_slug"], entry["careers_url"])
+        for job in fetched:
+            job.company_domain = company_domain
+        jobs.extend(fetched)
     for entry in job_sources.get("ats_sources", {}).get("lever", []):
-        jobs.extend(lever.fetch_jobs(entry["company_slug"], entry["careers_url"]))
+        company_domain = entry.get("company_domain")
+        fetched = lever.fetch_jobs(entry["company_slug"], entry["careers_url"])
+        for job in fetched:
+            job.company_domain = company_domain
+        jobs.extend(fetched)
 
     write_companies_csv(str(data_dir / "companies.csv"), jobs)
+    print(f"[info] Collected {len(jobs)} jobs.")
 
     recruiters = []
     seen_companies = set()
@@ -105,13 +115,26 @@ def main() -> None:
         recruiters.extend(identify_recruiters(job.company_name, job.careers_url))
 
     write_recruiters_csv(str(data_dir / "recruiters.csv"), recruiters)
+    print(f"[info] Identified {len(recruiters)} recruiter contacts.")
 
     validator = EmailValidator()
     emails = []
     recruiter_company_map: Dict[str, str] = {}
+    company_domain_map: Dict[str, str] = {}
+    for job in jobs:
+        if job.company_domain:
+            company_domain_map[job.company_name] = job.company_domain
     for recruiter in recruiters:
         recruiter_company_map[recruiter.recruiter_name] = recruiter.company_name
-        emails.extend(discover_from_careers_url(recruiter.recruiter_name, recruiter.profile_url, validator))
+        company_domain = company_domain_map.get(recruiter.company_name)
+        emails.extend(
+            discover_from_careers_url(
+                recruiter.recruiter_name,
+                recruiter.profile_url,
+                validator,
+                company_domain=company_domain,
+            )
+        )
 
     deduped_emails = {}
     for email in emails:
@@ -120,6 +143,7 @@ def main() -> None:
 
     emails = list(deduped_emails.values())
     write_emails_csv(str(data_dir / "emails.csv"), emails)
+    print(f"[info] Discovered {len(emails)} unique emails.")
 
     personalizer = EmailPersonalizer(str(config_dir / "prompt_templates"))
     footer_text = email_config.get("compliance", {}).get("unsubscribe_text", "")
@@ -131,6 +155,8 @@ def main() -> None:
         sender = None
     else:
         sender = SmtpSender(smtp_config) if smtp_config else None
+    if not sender:
+        print("[info] SMTP sender not configured; running in dry-run mode.")
 
     rate_limit = RateLimiter(
         daily_limit=int(os.getenv("DAILY_EMAIL_LIMIT", email_config["rate_limit"]["daily_limit"])),
@@ -144,6 +170,9 @@ def main() -> None:
     candidate_email = os.getenv("CANDIDATE_EMAIL", "candidate@example.com")
 
     job_lookup = {job.company_name: job for job in jobs}
+
+    if not emails:
+        print("[warn] No emails discovered; nothing to send.")
 
     for email in emails:
         if email.email in already_sent:

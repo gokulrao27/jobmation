@@ -18,6 +18,16 @@ def _domain_from_url(url: str) -> str:
     return urlparse(url).netloc
 
 
+def _guess_domain_from_ats(url: str) -> str:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    if "greenhouse.io" in host or "lever.co" in host:
+        slug = parsed.path.strip("/").split("/", 1)[0]
+        if slug:
+            return f"{slug}.com"
+    return ""
+
+
 def _name_parts(name: str) -> tuple[str, str]:
     parts = name.strip().split()
     if not parts:
@@ -59,7 +69,10 @@ def discover_emails(
 
 
 def discover_from_careers_url(
-    recruiter_name: str, careers_url: str, validator: EmailValidator
+    recruiter_name: str, careers_url: str, validator: EmailValidator, company_domain: str | None = None
 ) -> List[DiscoveredEmail]:
-    domain = _domain_from_url(careers_url)
+    domain = (company_domain or "").strip().lower()
+    if not domain:
+        guessed = _guess_domain_from_ats(careers_url)
+        domain = guessed if guessed else _domain_from_url(careers_url)
     return discover_emails(recruiter_name, domain, validator)
